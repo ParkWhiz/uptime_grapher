@@ -32,6 +32,7 @@ class PingdomClient
     @check_ids.keys
   end
 
+  # from and to should be Time instances
   def get_uptime_perct(check_name, from=nil, to=nil)
     from = from ? from.to_i : 0
     to = to ? to.to_i : Time.now.to_i
