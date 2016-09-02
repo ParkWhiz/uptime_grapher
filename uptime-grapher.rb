@@ -7,6 +7,7 @@ require 'rubygems'
 require 'excon'
 require 'dotenv'
 require 'gruff'
+require 'chronic'
 
 class PingdomClient
 
@@ -50,7 +51,7 @@ class PingdomClient
 
 end
 
-def create_graph(filename: 'uptime.png', whitelist_checks: nil)
+def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_checks: nil)
   g = Gruff::Line.new
   client = PingdomClient.new(ENV['PINGDOM_USER_EMAIL'],
                              ENV['PINGDOM_USER_PASSWD'],
@@ -62,7 +63,7 @@ def create_graph(filename: 'uptime.png', whitelist_checks: nil)
   end
 
   now = Time.now
-  dts = (0..8).map { |i| now - (i * 7 * 24 * 60 * 60) }.reverse
+  dts = (0..range).map { |i| Chronic.parse("#{i} #{interval} ago") }.reverse
 
   puts 'collecting data...'
   puts
