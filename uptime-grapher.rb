@@ -3,6 +3,7 @@
 require 'time'
 require 'base64'
 require 'json'
+require 'optparse'
 require 'rubygems'
 require 'excon'
 require 'dotenv'
@@ -68,7 +69,6 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
   puts 'collecting data...'
   puts
   all_checks.each do |check|
-  #client.all_checks[0,2].each do |check|
     data = dts.each_cons(2).map do |from, to| 
       client.get_uptime_perct(check, from, to)
     end
@@ -81,6 +81,8 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
 
   g.title = "Parkwhiz % Uptime by Week"
   # http://stackoverflow.com/questions/14528560/convert-an-array-to-hash-where-keys-are-the-indices
+  timefmt = '%m-%d'
+  timefmt = '%Y' if interval == :year
   labels = dts.drop(1).map { |dt| dt.strftime('%m-%d') }
   g.labels = Hash[(0...labels.size).zip labels]
 
@@ -90,5 +92,37 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
 end
 
 Dotenv.load
+
+interval = 'week'
+range = 8
+filename = 'uptime.png'
 whitelist = ENV['PINGDOM_CHECKS'] ? ENV['PINGDOM_CHECKS'].split(',') : nil
-filename = create_graph(whitelist_checks: whitelist)
+
+opt_parser = OptionParser.new do |opt|
+
+  opt.banner = 'Create historical uptime report'
+  opt.separator ""
+  opt.separator "Usage: ./uptime-grapher.rb [options] "
+
+  opt.on('-i', '--interval [INTERVAL]', [:week, :month, :year], 
+         'Report uptimes for every {week,month,year}') do |cl_interval|
+    interval = cl_interval
+  end
+
+  opt.on('-r', '--range [RANGE]', Integer, 
+         'Number of data points to report') do |cl_range|
+    range = cl_range
+  end
+
+  opt.on('-f', '--file [FILE]', 'output filename') do |cl_filename|
+    filename = cl_filename
+  end
+
+  opt.on('-w', '--whitelist [check1,check2,check3]', Array, 
+         'checks to include') do |cl_whitelist|
+    whitelist = cl_whitelist
+  end
+
+end.parse!
+
+filename = create_graph(interval: interval, range: range, filename: filename, whitelist_checks: whitelist)

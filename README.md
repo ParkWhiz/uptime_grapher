@@ -23,6 +23,7 @@ brew install gs
 
 ## Usage
 
+see
 ```
-./uptime-grapher.rb
+./uptime-grapher.rb --help
 ```
