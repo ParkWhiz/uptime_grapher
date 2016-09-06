@@ -1,0 +1,21 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    chronic (0.10.2)
+    dotenv (2.1.1)
+    excon (0.45.4)
+    gruff (0.7.0)
+      rmagick (~> 2.13, >= 2.13.4)
+    rmagick (2.16.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  chronic (~> 0.10.2)
+  dotenv (~> 2.1, >= 2.1.1)
+  excon (~> 0.45.4)
+  gruff (~> 0.7.0)
+
+BUNDLED WITH
+   1.11.2
