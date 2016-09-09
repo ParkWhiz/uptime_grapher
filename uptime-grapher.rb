@@ -47,7 +47,7 @@ class PingdomClient
     status = body['summary']['status']
     totalup = status['totalup'].to_f
     totaldown = status['totaldown'].to_f
-    totalup / (totalup + totaldown)
+    (totalup / (totalup + totaldown)) * 100
   end
 
 end
