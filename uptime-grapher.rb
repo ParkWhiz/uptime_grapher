@@ -9,6 +9,7 @@ require 'excon'
 require 'dotenv'
 require 'gruff'
 require 'chronic'
+require 'facets/string/titlecase'
 
 class PingdomClient
 
@@ -79,7 +80,7 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
     g.data(check, data)
   end
 
-  g.title = "Parkwhiz % Uptime by Week"
+  g.title = "Parkwhiz % Uptime by #{interval.to_s.titlecase}"
   # http://stackoverflow.com/questions/14528560/convert-an-array-to-hash-where-keys-are-the-indices
   timefmt = '%m-%d'
   timefmt = '%Y' if interval == :year
