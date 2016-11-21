@@ -36,7 +36,7 @@ class PingdomClient
   end
 
   # from and to should be Time instances
-  def get_uptime_perct(check_name, from=nil, to=nil)
+  def get_uptime_perct(check_name, from=nil, to=nil, scheduled_minutes=nil)
     from = from ? from.to_i : 0
     to = to ? to.to_i : Time.now.to_i
     check_id = @check_ids[check_name]
@@ -48,12 +48,16 @@ class PingdomClient
     status = body['summary']['status']
     totalup = status['totalup'].to_f
     totaldown = status['totaldown'].to_f
+    if scheduled:
+      totaldown -= scheduled
+      totalup += scheduled
+    end
     (totalup / (totalup + totaldown)) * 100
   end
 
 end
 
-def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_checks: nil)
+def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_checks: nil, scheduled: {})
   g = Gruff::Line.new
   client = PingdomClient.new(ENV['PINGDOM_USER_EMAIL'],
                              ENV['PINGDOM_USER_PASSWD'],
@@ -71,7 +75,7 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
   puts
   all_checks.each do |check|
     data = dts.each_cons(2).map do |from, to| 
-      client.get_uptime_perct(check, from, to)
+      client.get_uptime_perct(check, from, to, scheduled['check'])
     end
     puts "Check: #{check}"
     puts '-' * 80
@@ -98,6 +102,7 @@ interval = 'week'
 range = 8
 filename = 'uptime.png'
 whitelist = ENV['PINGDOM_CHECKS'] ? ENV['PINGDOM_CHECKS'].split(',') : nil
+scheduled = {}
 
 opt_parser = OptionParser.new do |opt|
 
@@ -124,6 +129,10 @@ opt_parser = OptionParser.new do |opt|
     whitelist = cl_whitelist
   end
 
+  opt.on('-s' '--scheduled [FILE]', 'YAML file showing number of minutes of expected downtime per service') do |scheduled|
+    scheduled = YAML.load_file(scheduled)
+  end
+
 end.parse!
 
-filename = create_graph(interval: interval, range: range, filename: filename, whitelist_checks: whitelist)
+filename = create_graph(interval: interval, range: range, filename: filename, whitelist_checks: whitelist, scheduled: scheduled)
