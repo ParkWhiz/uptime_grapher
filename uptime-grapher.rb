@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'yaml'
 require 'time'
 require 'base64'
 require 'json'
@@ -48,10 +49,7 @@ class PingdomClient
     status = body['summary']['status']
     totalup = status['totalup'].to_f
     totaldown = status['totaldown'].to_f
-    if scheduled:
-      totaldown -= scheduled
-      totalup += scheduled
-    end
+    totaldown -= scheduled_minutes * 60 if scheduled_minutes
     (totalup / (totalup + totaldown)) * 100
   end
 
@@ -71,11 +69,26 @@ def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_c
   now = Time.now
   dts = (0..range).map { |i| Chronic.parse("#{i} #{interval} ago") }.reverse
 
+  scheduled_processed = {}
+
+  scheduled.each do |isotime, services|
+    scheduled_date = Chronic.parse(isotime)
+    dts.each_cons(2).map do |from, to|
+      if from <= scheduled_date and to >= scheduled_date
+        scheduled_processed[to] = services
+      end
+    end
+  end
+
   puts 'collecting data...'
   puts
   all_checks.each do |check|
     data = dts.each_cons(2).map do |from, to| 
-      client.get_uptime_perct(check, from, to, scheduled['check'])
+      scheduled_minutes = nil
+      if scheduled_processed[to]
+        scheduled_minutes = scheduled_processed[to][check] 
+      end
+      client.get_uptime_perct(check, from, to, scheduled_minutes)
     end
     puts "Check: #{check}"
     puts '-' * 80
@@ -129,8 +142,8 @@ opt_parser = OptionParser.new do |opt|
     whitelist = cl_whitelist
   end
 
-  opt.on('-s' '--scheduled [FILE]', 'YAML file showing number of minutes of expected downtime per service') do |scheduled|
-    scheduled = YAML.load_file(scheduled)
+  opt.on('-s', '--scheduled [FILE]', 'YAML file showing number of minutes of expected downtime per service') do |scheduled_file|
+    scheduled = YAML.load_file(scheduled_file)
   end
 
 end.parse!
