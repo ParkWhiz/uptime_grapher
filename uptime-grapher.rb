@@ -113,7 +113,7 @@ Dotenv.load
 
 interval = 'week'
 range = 8
-filename = 'uptime.png'
+filename = "uptime#{Time.new.strftime('%Y%m%d')}.png"
 whitelist = ENV['PINGDOM_CHECKS'] ? ENV['PINGDOM_CHECKS'].split(',') : nil
 scheduled = {}
 
