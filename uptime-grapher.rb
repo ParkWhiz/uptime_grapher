@@ -57,6 +57,8 @@ end
 
 def create_graph(interval: 'week', range: 8, filename: 'uptime.png', whitelist_checks: nil, scheduled: {})
   g = Gruff::Line.new
+  g.reference_lines[:three9s] = { value: 99.9, color: 'red' }
+  g.reference_lines[:four9s] = { value: 99.99, color: 'green' }
   client = PingdomClient.new(ENV['PINGDOM_USER_EMAIL'],
                              ENV['PINGDOM_USER_PASSWD'],
                              ENV['PINGDOM_APP_KEY'])
